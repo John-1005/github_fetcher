@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var sortOrder string
+
 var rootCmd = &cobra.Command{
 	Use:   "githubfetcher [username]",
 	Short: "Fetches github respositories for a given user",
@@ -31,9 +33,12 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	rootCmd.Flags().StringVarP(&sortOrder, "sort", "s", "", "Sort repositories by stargazers")
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
