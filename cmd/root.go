@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/John-1005/github_fetcher/internal/githubapi"
+	"github.com/spf13/cobra"
 )
 
 var sortOrder string
@@ -27,14 +29,24 @@ var rootCmd = &cobra.Command{
 
 		userName := args[0]
 
-		fmt.Printf("Fetching reposotories for: %s\n", userName)
+		client := githubapi.NewClient()
+
+		repos, err := client.GetRepositories(userName)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Fetched %d repositories for %s:\n", len(repos), userName)
+		for _, r := range repos {
+			fmt.Printf("- %s (%d stars)\n", r.Name, r.StargazersCount)
+		}
 
 		return nil
 	},
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&sortOrder, "sort", "s", "", "Sort repositories by stargazers")
+	rootCmd.Flags().StringVarP(&sortOrder, "sort", "s", "desc", "Sort repositories by stargazers: 'asc or 'desc'")
 }
 
 func Execute() {
