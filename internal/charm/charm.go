@@ -1,40 +1,70 @@
 package charm
 
 import (
-	"strconv"
-
 	"github.com/John-1005/github_fetcher/internal/githubapi"
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
+	"golang.org/x/text/message"
 )
 
 func RenderTable(repos []githubapi.Repository) string {
 
-	greenText := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575"))  //Green
-	yellowText := lipgloss.NewStyle().Foreground(lipgloss.Color("#FFDE21")) //Star Yellow
-	style := lipgloss.NewStyle().Padding(2)
+	green := lipgloss.Color("#04B575")
+	yellow := lipgloss.Color("#FFDE21")
+	lightGray := lipgloss.Color("808080")
 
-	columns := []table.Column{
-		{Title: "Repository Name", Width: 30},
-		{Title: "Stars", Width: 4},
-	}
+	printer := message.NewPrinter(message.MatchLanguage("en"))
 
-	rows := []table.Row{}
+	maxNameLen := 0
 
 	for _, repo := range repos {
-		rows = append(rows, table.Row{
-			greenText.Render(repo.Name),
-			yellowText.Render(strconv.Itoa(repo.StargazersCount)),
+		if len(repo.Name) > maxNameLen {
+			maxNameLen = len(repo.Name)
+		}
+	}
+
+	colWidthName := maxNameLen + 2
+
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lightGray).
+		Bold(true).
+		Align(lipgloss.Center)
+
+	repoNameStyle := lipgloss.NewStyle().
+		Foreground(green).
+		Padding(0, 1).
+		Width(colWidthName)
+
+	starStyle := lipgloss.NewStyle().
+		Foreground(yellow).
+		Padding(0, 1).
+		Width(8).
+		Align(lipgloss.Right)
+
+	var rows [][]string
+
+	for _, repo := range repos {
+		rows = append(rows, []string{
+			repo.Name,
+			printer.Sprintf("%d", repo.StargazersCount),
 		})
 	}
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(7),
-	)
+	t := table.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lightGray)).
+		Headers("Repository Name", "Stars").
+		Rows(rows...).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			if row == table.HeaderRow {
+				return headerStyle
+			}
+			if col == 0 {
+				return repoNameStyle
+			}
+			return starStyle
+		})
 
-	return style.Render(t.View())
+	return t.Render()
 
 }

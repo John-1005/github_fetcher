@@ -3,12 +3,16 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/John-1005/github_fetcher/internal/charm"
 	"github.com/John-1005/github_fetcher/internal/githubapi"
 	"github.com/spf13/cobra"
 )
 
 var sortOrder string
+var limit int
+var verbose bool
 
 var rootCmd = &cobra.Command{
 	Use:   "githubfetcher [username]",
@@ -28,18 +32,22 @@ var rootCmd = &cobra.Command{
 		}
 
 		userName := args[0]
+		order := strings.ToLower(sortOrder)
 
 		client := githubapi.NewClient()
 
-		repos, err := client.GetRepositories(userName)
+		repos, err := client.GetRepositories(userName, verbose)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Fetched %d repositories for %s:\n", len(repos), userName)
-		for _, r := range repos {
-			fmt.Printf("- %s (%d stars)\n", r.Name, r.StargazersCount)
+		sortedRepos := githubapi.SortRepositories(repos, order)
+
+		if limit > 0 && len(sortedRepos) > limit {
+			sortedRepos = sortedRepos[:limit]
 		}
+
+		fmt.Println(charm.RenderTable(sortedRepos))
 
 		return nil
 	},
@@ -47,6 +55,8 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.Flags().StringVarP(&sortOrder, "sort", "s", "desc", "Sort repositories by stargazers: 'asc or 'desc'")
+	rootCmd.Flags().IntVarP(&limit, "limit", "l", 0, "Limit the number for repositories requested")
+	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enables Verbose output")
 }
 
 func Execute() {
