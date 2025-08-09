@@ -39,23 +39,23 @@ githubfetcher [username] [flags]
 
 githubfetcher octocat
 
--Sort ascending by stars:
+- Sort ascending by stars:
 
 githubfetcher octocat --sort asc
 
--Limit to top 5 repos:
+- Limit to top 5 repos:
 
 githubfetcher octocat --limit 5
 
--Verbose mode (see cache hits/misses, API calls, etc.):
+- Verbose mode (see cache hits/misses, API calls, etc.):
 
 githubfetcher octocat --verbose
 
--Skip cache for this run:
+- Skip cache for this run:
 
 githubfetcher octocat --no-cache
 
--Clear the cache and exit:
+- Clear the cache and exit:
 
 githubfetcher --clear-cache
 
@@ -70,9 +70,8 @@ githubfetcher --clear-cache
 - [verbose] Cache found for <username> → cache hit
 - [verbose] No cache found for <username> → cache miss
 
----
-
-## Example Verbose Output
+## **Example Verbose Output**
+```text
 [verbose] Cache found for octocat
 ┌────────────────────┬────────┐
 │  Repository Name   │ Stars  │
@@ -86,8 +85,8 @@ githubfetcher --clear-cache
 │ boysenberry-repo-1 │    350 │
 │ test-repo1         │    339 │
 └────────────────────┴────────┘
+```
 
----
 
 ## Rate Limits
 - Unauthenticated requests: 60 requests/hour per IP.
