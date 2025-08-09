@@ -13,6 +13,8 @@ import (
 var sortOrder string
 var limit int
 var verbose bool
+var noCache bool
+var clearCache bool
 
 var rootCmd = &cobra.Command{
 	Use:   "githubfetcher [username]",
@@ -27,6 +29,15 @@ var rootCmd = &cobra.Command{
 				githubfetcher johnsmith --sort asc`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		if clearCache {
+			client := githubapi.NewClient()
+			client.ClearCache()
+			os.Remove(client.CacheFilePath())
+			fmt.Println("Cache cleared")
+			return nil
+		}
+
 		if len(args) == 0 {
 			return fmt.Errorf("Github username is required")
 		}
@@ -36,7 +47,7 @@ var rootCmd = &cobra.Command{
 
 		client := githubapi.NewClient()
 
-		repos, err := client.GetRepositories(userName, verbose)
+		repos, err := client.GetRepositories(userName, verbose, noCache)
 		if err != nil {
 			return err
 		}
@@ -57,6 +68,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&sortOrder, "sort", "s", "desc", "Sort repositories by stargazers: 'asc or 'desc'")
 	rootCmd.Flags().IntVarP(&limit, "limit", "l", 0, "Limit the number for repositories requested")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enables Verbose output")
+	rootCmd.Flags().BoolVarP(&noCache, "no-cache", "", false, "Disables cache to always fetch fresh data")
+	rootCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false, "Cleares saved cache")
 }
 
 func Execute() {

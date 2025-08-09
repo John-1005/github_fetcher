@@ -8,20 +8,23 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/John-1005/github_fetcher/internal/githubcache"
 )
 
 type Client struct {
 	BaseURL string
-	//Eventual caching added
+	cache   *githubcache.Cache
 }
 
 func NewClient() Client {
 	return Client{
 		BaseURL: "https://api.github.com/users/",
+		cache:   githubcache.NewCache(10 * time.Minute),
 	}
 }
 
-func (c *Client) GetRepositories(username string, verbose bool) ([]Repository, error) {
+func (c *Client) GetRepositories(username string, verbose bool, noCache bool) ([]Repository, error) {
 	if username == "" {
 		return nil, errors.New("username cannot be empty")
 	}
@@ -29,6 +32,26 @@ func (c *Client) GetRepositories(username string, verbose bool) ([]Repository, e
 	page := 1
 	perPage := 60
 	searchedRepos := []Repository{}
+	key := username
+
+	if !noCache {
+		if data, found := c.cache.Get(key); found {
+			if verbose {
+				fmt.Printf("[verbose] Cache found for %s\n", key)
+			}
+			var repos []Repository
+			err := json.Unmarshal(data, &repos)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to unmarshal JSON: %w", err)
+			}
+			return repos, nil
+		}
+		if verbose {
+			fmt.Printf("[verbose] No cache found for %s\n", username)
+		}
+	} else if verbose {
+		fmt.Println("[verbose] Skipping cache due to --no-cache flag")
+	}
 
 	for {
 		url := c.BaseURL + username + "/repos?per_page=" + strconv.Itoa(perPage) + "&page=" + strconv.Itoa(page)
@@ -134,5 +157,21 @@ func (c *Client) GetRepositories(username string, verbose bool) ([]Repository, e
 		fmt.Printf("[verbose] Total repos fetched: %d\n", len(searchedRepos))
 	}
 
+	if !noCache {
+		jsonCached, err := json.Marshal(searchedRepos)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal JSON: %s", err)
+		}
+		c.cache.Add(key, jsonCached)
+	}
+
 	return searchedRepos, nil
+}
+
+func (c *Client) ClearCache() {
+	c.cache.Clear()
+}
+
+func (c *Client) CacheFilePath() string {
+	return c.cache.CacheFilePath()
 }
