@@ -51,7 +51,37 @@ func (c *Client) GetRepositories(username string, verbose bool) ([]Repository, e
 		}
 
 		if verbose {
-			fmt.Printf("[verbose] Status code :%d\n", rsp.StatusCode)
+			limitHeader := rsp.Header.Get("X-RateLimit-Limit")
+			remainingHeader := rsp.Header.Get("X-RateLimit-Remaining")
+			resetHeader := rsp.Header.Get("X-RateLimit-Reset")
+
+			fmt.Printf("[verbose] Rate Limit: %s requests/hour\n", limitHeader)
+			fmt.Printf("[verbose] Remaining: %s\n", remainingHeader)
+
+			if remainingHeader != "" {
+				remainingInt, err := strconv.Atoi(remainingHeader)
+				if err != nil {
+				} else {
+					if remainingInt <= 8 {
+						fmt.Printf("[verbose][WARNING] Only %d requests remaining before rate limit hit\n", remainingInt)
+					}
+				}
+			}
+
+			if resetHeader != "" {
+				resetUnix, err := strconv.ParseInt(resetHeader, 10, 64)
+				if err != nil {
+				} else {
+					resetTime := time.Unix(resetUnix, 0)
+
+					fmt.Printf("[verbose] Rate limit resets at: %s\n", resetTime.UTC().Format(time.RFC1123))
+				}
+			}
+
+		}
+
+		if verbose {
+			fmt.Printf("[verbose] Status code: %d\n", rsp.StatusCode)
 		}
 
 		if rsp.StatusCode == http.StatusForbidden {
