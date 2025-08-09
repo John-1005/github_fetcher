@@ -39,23 +39,23 @@ githubfetcher [username] [flags]
 
 githubfetcher octocat
 
-Sort ascending by stars:
+-Sort ascending by stars:
 
 githubfetcher octocat --sort asc
 
-Limit to top 5 repos:
+-Limit to top 5 repos:
 
 githubfetcher octocat --limit 5
 
-Verbose mode (see cache hits/misses, API calls, etc.):
+-Verbose mode (see cache hits/misses, API calls, etc.):
 
 githubfetcher octocat --verbose
 
-Skip cache for this run:
+-Skip cache for this run:
 
 githubfetcher octocat --no-cache
 
-Clear the cache and exit:
+-Clear the cache and exit:
 
 githubfetcher --clear-cache
 
